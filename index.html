@@ -52,7 +52,7 @@ function size(){
 }
 
 function mk(id,d,x,st){th[id]={id,d,x,y:baseY(),pts:[],st:st||'live',born:T,flash:0,left:0,i:0};return th[id];}
-function join(id,from){const t=mk(id,P[id],from==='L'?-140:from==='R'?W+140:null);if(from)t.flash=4;}
+function join(id,from){const t=mk(id,P[id],from==='L'?-140:from==='R'?W+140:null);if(from&&id!=='amigo'&&id!=='esposa')t.flash=4;}
 function pass(n,dir,y){const t=mk('c'+T,{n,c:'#ffffff',o:0},dir>0?-140:W+140,'pass');t.dir=dir;t.y=y;t.y0=y;}
 function leave(id,away){const t=th[id];if(!t)return;if(id==='amigo'){t.exit=true;t.tx=W+200;t.exitX0=t.x;return;}t.st='rise';t.away=!!away;t.left=T;t.fd=6;}
 function finale(){
@@ -72,7 +72,7 @@ const EV=[
   [24,()=>pass('Colega da faculdade',1,H*.70)],
   [28,()=>join('esposa','L')],
   [33,()=>leave('amigo',true)],
-  [41,()=>join('filho','R')],
+  [42,()=>join('filho','R')],
   [41,()=>leave('pai')],
   [46,()=>leave('mae')],
   [51,()=>leave('esposa')],
@@ -100,7 +100,7 @@ function step(dt){
     if(t.st==='live'&&t.dir===undefined)for(const p of t.pts)p.y+=sc;
     while(t.pts.length&&t.pts[0].y>H+20)t.pts.shift();
     if(t.st==='live'){
-      t.vx=t.vx||0;const kk=t.exit?.12:.5,dd=t.exit?.7:1.4;t.vx+=((t.tx-t.x)*kk-t.vx*dd)*dt;t.x+=t.vx*dt;const ex=t.exit?Math.min(1,Math.max(0,(t.x-t.exitX0)/(W+200-t.exitX0))):0;t.y=baseY()+(t.d.dy||0)*H-H*.8*ex;if(t.exit&&t.x>W+140){t.st='gone';t.left=T;}
+      t.vx=t.vx||0;const kk=t.exit?.12:.5,dd=t.exit?.7:1.4;t.vx+=((t.tx-t.x)*kk-t.vx*dd)*dt;t.x+=t.vx*dt;const ex=t.exit?Math.max(0,(t.x-t.exitX0)/(W+140-t.exitX0)):0;t.y=baseY()+(t.d.dy||0)*H-H*.35*(2*ex-ex*ex);if(t.exit&&t.x>W+140){t.st='gone';t.left=T;}
     }else if(t.st==='pass'){
       t.x+=t.dir*(W/4)*dt;const u=Math.min(1,Math.abs(t.x-(t.dir>0?-140:W+140))/(W+280));t.y=t.y0-H*.2*u*u;
       if((t.dir>0&&t.x>W+140)||(t.dir<0&&t.x<-140)){t.st='gone';t.left=T;}
@@ -185,7 +185,7 @@ function draw(){
     if(p[0]>-60&&p[0]<W+60)ctx.fillText(txt,p[0],ly);
   }
   ctx.globalAlpha=1;
-  const age=Math.max(0,Math.floor((T-1)*1.1));
+  const age=Math.floor(85*Math.pow(Math.max(0,T-1)/56,1.25));
   if(age!==lastAge){lastAge=age;$('age').textContent=age+' anos';}
 }
 
