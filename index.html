@@ -44,7 +44,7 @@ const P={
   pai:{n:'Pai',c:'#5b8cff',o:3,dy:-.02},
   avo2:{n:'Avó',c:'#9fe3ff',o:4,dy:.01}
 };
-const STAR={avo1:[.12,.12],avo2:[.88,.1],pai:[.8,.42],mae:[.14,.46],esposa:[.33,.40],filho:[.9,.2],eu:[.5,.5]};
+const STAR={avo1:[.12,.12],avo2:[.88,.1],pai:[.8,.42],mae:[.14,.46],esposa:[.33,.40],filho:[.78,.2],eu:[.5,.5]};
 const CHAIN=['avo1','mae','esposa','eu','pai','filho','avo2'];
 const baseY=()=>H*.56;
 
@@ -55,7 +55,7 @@ function size(){
 }
 
 function mk(id,d,x,st){th[id]={id,d,x,y:baseY(),pts:[],st:st||'live',born:T,flash:0,left:0,i:0};return th[id];}
-function join(id,from){const t=mk(id,P[id],from==='L'?-140:from==='R'?W+140:null);if(from&&id!=='amigo'&&id!=='esposa')t.flash=4;}
+function join(id,from){const t=mk(id,P[id],from==='L'?-140:from==='R'?W+140:null);if(from&&id!=='amigo'&&id!=='esposa')t.flash=1;}
 function pass(n,dir,y){const t=mk('c'+T,{n,c:'#ffffff',o:0},dir>0?-140:W+140,'pass');t.dir=dir;t.y=y;t.y0=y;}
 function leave(id,away){const t=th[id];if(!t)return;if(id==='amigo'){t.exit=true;t.tx=W+200;t.exitX0=t.x;t.exitY0=t.y;t.exitX1=W+260;t.exitY1=t.y-H*.3;t.exitCX=t.x+W*.06;t.exitCY=t.y-H*.3;t.exitEl=0;t.exitDur=5;return;}t.st='rise';t.away=!!away;t.left=T;t.fd=6;}
 function finale(){
@@ -163,8 +163,8 @@ function draw(){
     if(t.st==='fstar'){glow(p[0],p[1],22+2*pulse,t.d.c,.5);glow(p[0],p[1],5,'#fff',.6);}
     else if(t.st==='star'){glow(p[0],p[1],13+2*pulse,t.d.c,.8);glow(p[0],p[1],3,'#fff',1);}
     else{
-      const grow=Math.min(1,(T-t.born)/2+.2),big=t.flash>0?1.5:1;
-      glow(p[0],p[1],13*grow*big,t.flash>0?'#fff':t.d.c,.85*(t.id==='eu'?Math.min(1,(T-t.born)/1):1));glow(p[0],p[1],3*grow,'#fff',1);
+      const grow=Math.min(1,(T-t.born)/2+.2),big=t.flash>0?1.08:1;
+      glow(p[0],p[1],13*grow*big,t.d.c,.85*(t.id==='eu'?Math.min(1,(T-t.born)/1):1));glow(p[0],p[1],3*grow,'#fff',1);
     }
   }
   ctx.globalCompositeOperation='source-over';
