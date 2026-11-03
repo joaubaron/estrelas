@@ -22,7 +22,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 <div id="age"></div>
 <div id="quote">Algumas pessoas passam como cometas. Outras são estrelas.</div>
 <div id="end">
-  <p>Alguns te acompanham por um trecho.<br>Outros ficam para sempre no "seu céu".</p>
+  <p>Alguns te acompanham por um trecho.<br>Outros ficam para sempre no seu céu.</p>
   <button id="again" type="button">Ver de novo</button>
 </div>
 <script>
@@ -72,7 +72,7 @@ const EV=[
   [24,()=>pass('Colega da faculdade',1,H*.70)],
   [28,()=>join('esposa','L')],
   [33,()=>leave('amigo',true)],
-  [41,()=>join('filho','R')],
+  [42,()=>join('filho','R')],
   [41,()=>leave('pai')],
   [46,()=>leave('mae')],
   [51,()=>leave('esposa')],
@@ -185,7 +185,7 @@ function draw(){
     if(p[0]>-60&&p[0]<W+60)ctx.fillText(txt,p[0],ly);
   }
   ctx.globalAlpha=1;
-  const age=Math.max(0,Math.floor((T-1)*1.1));
+  const age=Math.floor(85*Math.pow(Math.max(0,T-1)/56,1.25));
   if(age!==lastAge){lastAge=age;$('age').textContent=age+' anos';}
 }
 
