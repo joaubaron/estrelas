@@ -12,16 +12,17 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 #quote{position:fixed;left:0;right:0;top:30%;transform:translateY(-50%);text-align:center;padding:0 10vw;font-size:clamp(12px,3.4vw,14px);line-height:1.5}
 #end{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 6vh);text-align:center;padding:0 8vw;opacity:0;transition:opacity 2.5s;pointer-events:none}
 #end p{margin:0;color:var(--ink);font-style:italic;line-height:1.5;font-size:clamp(12px,3.4vw,14px);white-space:nowrap}
-button{margin-top:.8em;background:none;border:1px solid #ffffff55;color:var(--ink);padding:.35em 1em;border-radius:99px;font:inherit;font-size:12px;cursor:pointer}
+button{margin-top:1.6em;background:none;border:1px solid #ffffff55;color:var(--ink);padding:.35em 1em;border-radius:99px;font:inherit;font-size:12px;cursor:pointer}
 button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 </style>
 </head>
 <body>
 <canvas id="c" aria-hidden="true"></canvas>
+<audio id="bg" src="trilha.mp3" loop preload="auto"></audio>
 <div id="age"></div>
-<div id="quote">Algumas pessoas passam como cometas. Outras ficam como estrelas fixas</div>
+<div id="quote">Algumas pessoas passam como cometas. Outras são estrelas.</div>
 <div id="end">
-  <p>Alguns te acompanham por um trecho.<br>Outros ficam para sempre no seu céu.</p>
+  <p>Alguns te acompanham por um trecho.<br>Outros ficam para sempre no "seu céu".</p>
   <button id="again" type="button">Ver de novo</button>
 </div>
 <script>
@@ -31,16 +32,16 @@ const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let W,H,D,bg=[],T,th,ev,fade,lines,lastAge;
 
 const P={
-  avo1:{n:'Avô',c:'#b79cff',o:0},
-  mae:{n:'Mãe',c:'#ff6b8a',o:1},
-  esposa:{n:'Esposa',c:'#ff8fc2',o:1.5},
-  eu:{n:'Eu',c:'#ffb02e',o:2},
-  amigo:{n:'Amigo de infância',c:'#5fe0a0',o:2.5},
+  avo1:{n:'Avô',c:'#b79cff',o:0,dy:-.03},
+  mae:{n:'Mãe',c:'#ff6b8a',o:1,dy:.02},
+  esposa:{n:'Esposa',c:'#ff8fc2',o:1.5,dy:-.01},
+  eu:{n:'Eu',c:'#ffb02e',o:2,dy:.03},
+  amigo:{n:'Amigo',c:'#5fe0a0',o:2.5,dy:0},
   filho:{n:'Filho',c:'#35d7e8',o:2.7},
-  pai:{n:'Pai',c:'#5b8cff',o:3},
-  avo2:{n:'Avó',c:'#9fe3ff',o:4}
+  pai:{n:'Pai',c:'#5b8cff',o:3,dy:-.02},
+  avo2:{n:'Avó',c:'#9fe3ff',o:4,dy:.01}
 };
-const STAR={avo1:[.12,.12],avo2:[.88,.1],pai:[.8,.42],mae:[.14,.46],esposa:[.33,.52],filho:[.9,.2],eu:[.5,.6]};
+const STAR={avo1:[.12,.12],avo2:[.88,.1],pai:[.8,.42],mae:[.14,.46],esposa:[.33,.40],filho:[.9,.2],eu:[.5,.5]};
 const CHAIN=['avo1','mae','esposa','eu','pai','filho','avo2'];
 const baseY=()=>H*.56;
 
@@ -51,11 +52,11 @@ function size(){
 }
 
 function mk(id,d,x,st){th[id]={id,d,x,y:baseY(),pts:[],st:st||'live',born:T,flash:0,left:0,i:0};return th[id];}
-function join(id,from){const t=mk(id,P[id],from==='L'?-30:from==='R'?W+30:null);if(from)t.flash=4;}
-function pass(n,dir,y){const t=mk('c'+T,{n,c:'#ffffff',o:0},dir>0?-30:W+30,'pass');t.dir=dir;t.y=y;t.y0=y;}
-function leave(id,away){const t=th[id];if(!t)return;t.st='rise';t.left=T;t.away=!!away;}
+function join(id,from){const t=mk(id,P[id],from==='L'?-140:from==='R'?W+140:null);if(from)t.flash=4;}
+function pass(n,dir,y){const t=mk('c'+T,{n,c:'#ffffff',o:0},dir>0?-140:W+140,'pass');t.dir=dir;t.y=y;t.y0=y;}
+function leave(id,away){const t=th[id];if(!t)return;if(id==='amigo'){t.exit=true;t.tx=W+200;t.exitX0=t.x;return;}t.st='rise';t.away=!!away;t.left=T;t.fd=6;}
 function finale(){
-  if(th.eu){th.eu.st='fin';}
+  if(th.eu){th.eu.st='fin';th.eu.left=T;th.eu.fd=6;}
   leave('filho');
   $('end').style.opacity=1;$('end').style.pointerEvents='auto';
 }
@@ -64,14 +65,14 @@ const EV=[
   [0,()=>{['avo1','mae','pai','avo2'].forEach(k=>join(k));}],
   [1,()=>join('eu')],
   [5,()=>join('amigo','L')],
-  [9,()=>pass('Colega do ginásio',1,H*.80)],
-  [13,()=>pass('Primeiro amor',1,H*.90)],
+  [9,()=>pass('Colega de escola',1,H*.80)],
+  [14,()=>pass('Primeiro amor',1,H*.90)],
   [17,()=>leave('avo1')],
-  [20,()=>leave('avo2')],
+  [23,()=>leave('avo2')],
   [24,()=>pass('Colega da faculdade',1,H*.70)],
   [28,()=>join('esposa','L')],
   [33,()=>leave('amigo',true)],
-  [36,()=>join('filho','R')],
+  [41,()=>join('filho','R')],
   [41,()=>leave('pai')],
   [46,()=>leave('mae')],
   [51,()=>leave('esposa')],
@@ -85,7 +86,7 @@ function init(){
 }
 
 function lanes(){
-  const a=Object.values(th).filter(t=>t.st==='live').sort((x,y)=>x.d.o-y.d.o);
+  const a=Object.values(th).filter(t=>t.st==='live'&&!t.exit).sort((x,y)=>x.d.o-y.d.o);
   a.forEach((t,i)=>{t.tx=W*(i+1)/(a.length+1);t.i=i;if(t.x===null)t.x=t.tx;});
 }
 
@@ -96,26 +97,25 @@ function step(dt){
   const sc=55*dt;
   for(const id in th){
     const t=th[id];
-    if(t.st!=='pass')for(const p of t.pts)p.y+=sc;
+    if(t.st==='live'&&t.dir===undefined)for(const p of t.pts)p.y+=sc;
     while(t.pts.length&&t.pts[0].y>H+20)t.pts.shift();
     if(t.st==='live'){
-      t.x+=(t.tx-t.x)*Math.min(1,dt*2.2);t.y=baseY();
+      t.vx=t.vx||0;const kk=t.exit?.12:.5,dd=t.exit?.7:1.4;t.vx+=((t.tx-t.x)*kk-t.vx*dd)*dt;t.x+=t.vx*dt;const ex=t.exit?Math.min(1,Math.max(0,(t.x-t.exitX0)/(W+200-t.exitX0))):0;t.y=baseY()+(t.d.dy||0)*H-H*.8*ex;if(t.exit&&t.x>W+140){t.st='gone';t.left=T;}
     }else if(t.st==='pass'){
-      t.x+=t.dir*(W/4)*dt;const u=Math.min(1,Math.abs(t.x-(t.dir>0?-30:W+30))/(W+60));t.y=t.y0-H*.2*u*u;
-      if((t.dir>0&&t.x>W+30)||(t.dir<0&&t.x<-30)){t.st='gone';t.left=T;}
+      t.x+=t.dir*(W/4)*dt;const u=Math.min(1,Math.abs(t.x-(t.dir>0?-140:W+140))/(W+280));t.y=t.y0-H*.2*u*u;
+      if((t.dir>0&&t.x>W+140)||(t.dir<0&&t.x<-140)){t.st='gone';t.left=T;}
     }else if(t.st==='rise'||t.st==='fin'){
-      const sp=t.away?[1.15,.45]:STAR[t.id];
-      const gx=sp[0]*W,gy=sp[1]*H,k=Math.min(1,dt*1.3);
-      t.x+=(gx-t.x)*k;t.y+=(gy-t.y)*k;
-      if(Math.hypot(gx-t.x,gy-t.y)<2)t.st=t.away?'gone':(t.st==='fin'?'fstar':'star');
+      const sp=t.away?null:STAR[t.id];
+      const gx=sp?sp[0]*W:(t.id==='amigo'?W+200:(t.h0?t.h0.x0:t.x)),gy=sp?sp[1]*H:(t.id==='amigo'?(t.h0?t.h0.y0:t.y):H*.2);
+      const h=t.h0||(t.h0={x0:t.x,y0:t.y,t0:T,gx,gy});const D=6,s=Math.min(1,(T-h.t0)/D),e=s*s*s*(10-15*s+6*s*s),u=1-e;const amg=t.id==='amigo',cx=amg?h.x0+W*.12:h.x0,cy=amg?h.y0-H*.08:Math.min(h.y0,h.gy);t.x=u*u*h.x0+2*u*e*cx+e*e*h.gx;t.y=u*u*h.y0+2*u*e*cy+e*e*h.gy;if(s>=1){t.x=h.gx;t.y=h.gy;t.st=t.away?'gone':(t.st==='fin'?'fstar':'star');}
+      
     }
-    if(t.st==='live'||t.st==='pass'||t.st==='rise'||t.st==='fin')t.pts.push({x:t.x,y:t.y});
+    if(t.st==='live'||t.st==='pass'||t.st==='rise'||t.st==='fin'){const L=t.pts[t.pts.length-1];if(!L||Math.hypot(t.x-L.x,t.y-L.y)>3)t.pts.push({x:t.x,y:t.y});if(t.pts.length>45)t.pts.shift();}
     if(t.flash>0)t.flash-=dt;
-    if(t.dir!==undefined&&t.st==='gone'&&t.pts.length)t.pts.shift();
-    if(t.st==='gone'&&!t.pts.length)delete th[id];
+    if(t.st==='gone'&&T-t.left>2)delete th[id];
   }
   if(T>57){fade=Math.max(0,fade-dt*.25);}
-  if(T>59)lines=Math.min(1,lines+dt*.3);
+  if(T>61)lines=Math.min(1,lines+dt*.3);
 }
 
 function glow(x,y,r,c,a){
@@ -126,13 +126,13 @@ function glow(x,y,r,c,a){
 
 function trail(t){
   const n=t.pts.length;if(n<2)return;
-  const ft=t.left>0?Math.max(0,1-(T-t.left)/7):1;
-  ctx.strokeStyle=t.d.c;ctx.lineCap='round';ctx.lineJoin='round';
-  for(let i=0;i<n-1;i+=6){
-    const j=Math.min(i+6,n-1),a=Math.pow(j/n,1.2)*fade*ft;
+  const ft=(t.left>0?Math.max(0,1-(T-t.left)/(t.fd||2)):1)*(t.id==='eu'?Math.min(1,(T-t.born)/1):1);
+  ctx.strokeStyle=t.d.c;ctx.lineCap='butt';ctx.lineJoin='round';
+  for(let i=0;i<n-1;i++){
+    const a=Math.pow((i+1)/n,1.2)*fade*ft;
     if(a<.02)continue;
-    ctx.beginPath();ctx.moveTo(t.pts[i].x,t.pts[i].y);
-    for(let k=i+1;k<=j;k++)ctx.lineTo(t.pts[k].x,t.pts[k].y);
+    const p=t.pts[i],q=t.pts[i+1];
+    ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);
     ctx.globalAlpha=a*.2;ctx.lineWidth=7;ctx.stroke();
     ctx.globalAlpha=a*.9;ctx.lineWidth=2;ctx.stroke();
   }
@@ -157,11 +157,11 @@ function draw(){
   for(const t of list){
     if(t.st==='gone')continue;
     const p=pos(t.id),pulse=Math.sin(T*2+t.born);
-    if(t.st==='fstar'){glow(p[0],p[1],34+3*pulse,t.d.c,.9);glow(p[0],p[1],8,'#fff',1);}
+    if(t.st==='fstar'){glow(p[0],p[1],22+2*pulse,t.d.c,.5);glow(p[0],p[1],5,'#fff',.6);}
     else if(t.st==='star'){glow(p[0],p[1],13+2*pulse,t.d.c,.8);glow(p[0],p[1],3,'#fff',1);}
     else{
       const grow=Math.min(1,(T-t.born)/2+.2),big=t.flash>0?1.5:1;
-      glow(p[0],p[1],13*grow*big,t.flash>0?'#fff':t.d.c,.85);glow(p[0],p[1],3*grow,'#fff',1);
+      glow(p[0],p[1],13*grow*big,t.flash>0?'#fff':t.d.c,.85*(t.id==='eu'?Math.min(1,(T-t.born)/1):1));glow(p[0],p[1],3*grow,'#fff',1);
     }
   }
   ctx.globalCompositeOperation='source-over';
@@ -180,9 +180,9 @@ function draw(){
     const p=pos(t.id);
     const star=t.st==='star'||t.st==='fstar';
     const txt=(t.flash>0&&t.d.f)?t.d.f:t.d.n;
-    const ly=p[1]-14-(t.i%2)*13;
-    ctx.fillStyle=t.d.c;ctx.globalAlpha=star?.9:.85;
-    ctx.fillText(txt,p[0],ly);
+    const ly=p[1]-16;
+    ctx.fillStyle=t.d.c;ctx.globalAlpha=(star?.9:.85)*(t.id==='eu'?Math.min(1,(T-t.born)/1):1);
+    if(p[0]>-60&&p[0]<W+60)ctx.fillText(txt,p[0],ly);
   }
   ctx.globalAlpha=1;
   const age=Math.max(0,Math.floor((T-1)*1.1));
@@ -196,6 +196,7 @@ function loop(ts){
   draw();requestAnimationFrame(loop);
 }
 
+const mus=$('bg');mus.volume=.25;addEventListener('pointerdown',()=>{if(mus.src)mus.play().catch(()=>{});},{once:true});
 $('again').addEventListener('click',init);
 addEventListener('resize',size);
 size();init();requestAnimationFrame(loop);
