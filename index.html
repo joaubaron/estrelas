@@ -54,7 +54,7 @@ function size(){
 function mk(id,d,x,st){th[id]={id,d,x,y:baseY(),pts:[],st:st||'live',born:T,flash:0,left:0,i:0};return th[id];}
 function join(id,from){const t=mk(id,P[id],from==='L'?-140:from==='R'?W+140:null);if(from&&id!=='amigo'&&id!=='esposa')t.flash=4;}
 function pass(n,dir,y){const t=mk('c'+T,{n,c:'#ffffff',o:0},dir>0?-140:W+140,'pass');t.dir=dir;t.y=y;t.y0=y;}
-function leave(id,away){const t=th[id];if(!t)return;if(id==='amigo'){t.exit=true;t.tx=W+200;t.exitX0=t.x;return;}t.st='rise';t.away=!!away;t.left=T;t.fd=6;}
+function leave(id,away){const t=th[id];if(!t)return;if(id==='amigo'){t.exit=true;t.tx=W+200;t.exitX0=t.x;t.exitY0=t.y;t.exitX1=W+260;t.exitY1=t.y-H*.3;t.exitCX=t.x+W*.06;t.exitCY=t.y-H*.3;t.exitEl=0;t.exitDur=5;return;}t.st='rise';t.away=!!away;t.left=T;t.fd=6;}
 function finale(){
   if(th.eu){th.eu.st='fin';th.eu.left=T;th.eu.fd=6;}
   leave('filho');
@@ -72,8 +72,8 @@ const EV=[
   [24,()=>pass('Colega da faculdade',1,H*.70)],
   [28,()=>join('esposa','L')],
   [33,()=>leave('amigo',true)],
-  [42,()=>join('filho','R')],
   [41,()=>leave('pai')],
+  [44,()=>join('filho','R')],
   [46,()=>leave('mae')],
   [51,()=>leave('esposa')],
   [57,finale]
@@ -100,14 +100,14 @@ function step(dt){
     if(t.st==='live'&&t.dir===undefined)for(const p of t.pts)p.y+=sc;
     while(t.pts.length&&t.pts[0].y>H+20)t.pts.shift();
     if(t.st==='live'){
-      t.vx=t.vx||0;const kk=t.exit?.12:.5,dd=t.exit?.7:1.4;t.vx+=((t.tx-t.x)*kk-t.vx*dd)*dt;t.x+=t.vx*dt;const ex=t.exit?Math.min(1,Math.max(0,(t.x-t.exitX0)/(W+140-t.exitX0))):0;t.y=baseY()+(t.d.dy||0)*H-H*.4*Math.sin(Math.PI*ex);if(t.exit&&t.x>W+140){t.st='gone';t.left=T;}
+      t.vx=t.vx||0;const kk=t.exit?.12:.5,dd=t.exit?.7:1.4;t.vx+=((t.tx-t.x)*kk-t.vx*dd)*dt;if(t.exit){t.exitEl+=dt;const u=Math.min(1,t.exitEl/t.exitDur),v=1-u;t.x=v*v*t.exitX0+2*v*u*t.exitCX+u*u*t.exitX1;t.y=v*v*t.exitY0+2*v*u*t.exitCY+u*u*t.exitY1;if(u>=1){t.st='gone';t.left=T;}}else{t.x+=t.vx*dt;t.y=baseY()+(t.d.dy||0)*H;}
     }else if(t.st==='pass'){
       t.x+=t.dir*(W/4)*dt;const u=Math.min(1,Math.abs(t.x-(t.dir>0?-140:W+140))/(W+280));t.y=t.y0-H*.2*u*u;
       if((t.dir>0&&t.x>W+140)||(t.dir<0&&t.x<-140)){t.st='gone';t.left=T;}
     }else if(t.st==='rise'||t.st==='fin'){
       const sp=t.away?null:STAR[t.id];
       const gx=sp?sp[0]*W:(t.id==='amigo'?W+200:(t.h0?t.h0.x0:t.x)),gy=sp?sp[1]*H:(t.id==='amigo'?(t.h0?t.h0.y0:t.y):H*.2);
-      const h=t.h0||(t.h0={x0:t.x,y0:t.y,t0:T,gx,gy});const D=6,s=Math.min(1,(T-h.t0)/D),e=s*s*s*(10-15*s+6*s*s),u=1-e;const amg=t.id==='amigo',cx=amg?h.x0+W*.12:h.x0,cy=amg?h.y0-H*.08:Math.min(h.y0,h.gy);t.x=u*u*h.x0+2*u*e*cx+e*e*h.gx;t.y=u*u*h.y0+2*u*e*cy+e*e*h.gy;if(s>=1){t.x=h.gx;t.y=h.gy;t.st=t.away?'gone':(t.st==='fin'?'fstar':'star');}
+      const h=t.h0||(t.h0={x0:t.x,y0:t.y,t0:T,gx,gy});const D=t.id==='pai'?3:6,s=Math.min(1,(T-h.t0)/D),e=s*s*s*(10-15*s+6*s*s),u=1-e;const amg=t.id==='amigo',cx=amg?h.x0+W*.12:h.x0,cy=amg?h.y0-H*.08:Math.min(h.y0,h.gy);t.x=u*u*h.x0+2*u*e*cx+e*e*h.gx;t.y=u*u*h.y0+2*u*e*cy+e*e*h.gy;if(s>=1){t.x=h.gx;t.y=h.gy;t.st=t.away?'gone':(t.st==='fin'?'fstar':'star');}
       
     }
     if(t.st==='live'||t.st==='pass'||t.st==='rise'||t.st==='fin'){const L=t.pts[t.pts.length-1];if(!L||Math.hypot(t.x-L.x,t.y-L.y)>3)t.pts.push({x:t.x,y:t.y});if(t.pts.length>45)t.pts.shift();}
