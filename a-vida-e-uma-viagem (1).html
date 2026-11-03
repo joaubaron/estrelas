@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>A vida é uma viagem</title>
+<style>
+:root{--bg:#050816;--ink:#e9ecf8;--soft:#aab2d0;--gold:#ffb02e;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+#age{position:fixed;left:14px;top:calc(env(safe-area-inset-top,0px) + 10px);font:13px system-ui,sans-serif;color:var(--soft)}
+#quote{position:fixed;left:0;right:0;top:30%;transform:translateY(-50%);text-align:center;padding:0 10vw;font-size:clamp(12px,3.4vw,14px);line-height:1.5}
+#end{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 6vh);text-align:center;padding:0 8vw;opacity:0;transition:opacity 2.5s;pointer-events:none}
+#end p{margin:0;color:var(--ink);font-style:italic;line-height:1.5;font-size:clamp(12px,3.4vw,14px);white-space:nowrap}
+button{margin-top:.8em;background:none;border:1px solid #ffffff55;color:var(--ink);padding:.35em 1em;border-radius:99px;font:inherit;font-size:12px;cursor:pointer}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+</style>
+</head>
+<body>
+<canvas id="c" aria-hidden="true"></canvas>
+<div id="age"></div>
+<div id="quote">Algumas pessoas passam como cometas. Outras ficam como estrelas fixas</div>
+<div id="end">
+  <p>Alguns te acompanham por um trecho.<br>Outros ficam para sempre no seu céu.</p>
+  <button id="again" type="button">Ver de novo</button>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const cv=$('c'),ctx=cv.getContext('2d');
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let W,H,D,bg=[],T,th,ev,fade,lines,lastAge;
+
+const P={
+  avo1:{n:'Avô',c:'#b79cff',o:0},
+  mae:{n:'Mãe',c:'#ff6b8a',o:1},
+  esposa:{n:'Esposa',c:'#ff8fc2',o:1.5},
+  eu:{n:'Eu',c:'#ffb02e',o:2},
+  amigo:{n:'Amigo de infância',c:'#5fe0a0',o:2.5},
+  filho:{n:'Filho',c:'#35d7e8',o:2.7},
+  pai:{n:'Pai',c:'#5b8cff',o:3},
+  avo2:{n:'Avó',c:'#9fe3ff',o:4}
+};
+const STAR={avo1:[.12,.12],avo2:[.88,.1],pai:[.8,.42],mae:[.14,.46],esposa:[.33,.52],filho:[.9,.2],eu:[.5,.6]};
+const CHAIN=['avo1','mae','esposa','eu','pai','filho','avo2'];
+const baseY=()=>H*.56;
+
+function size(){
+  D=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+  cv.width=W*D;cv.height=H*D;ctx.setTransform(D,0,0,D,0,0);
+  bg=[];for(let i=0;i<90;i++)bg.push({x:Math.random(),y:Math.random(),r:Math.random()*1.2+.3,p:Math.random()*6.28});
+}
+
+function mk(id,d,x,st){th[id]={id,d,x,y:baseY(),pts:[],st:st||'live',born:T,flash:0,left:0,i:0};return th[id];}
+function join(id,from){const t=mk(id,P[id],from==='L'?-30:from==='R'?W+30:null);if(from)t.flash=4;}
+function pass(n,dir,y){const t=mk('c'+T,{n,c:'#ffffff',o:0},dir>0?-30:W+30,'pass');t.dir=dir;t.y=y;t.y0=y;}
+function leave(id,away){const t=th[id];if(!t)return;t.st='rise';t.left=T;t.away=!!away;}
+function finale(){
+  if(th.eu){th.eu.st='fin';}
+  leave('filho');
+  $('end').style.opacity=1;$('end').style.pointerEvents='auto';
+}
+
+const EV=[
+  [0,()=>{['avo1','mae','pai','avo2'].forEach(k=>join(k));}],
+  [1,()=>join('eu')],
+  [5,()=>join('amigo','L')],
+  [9,()=>pass('Colega do ginásio',1,H*.80)],
+  [13,()=>pass('Primeiro amor',1,H*.90)],
+  [17,()=>leave('avo1')],
+  [20,()=>leave('avo2')],
+  [24,()=>pass('Colega da faculdade',1,H*.70)],
+  [28,()=>join('esposa','L')],
+  [33,()=>leave('amigo',true)],
+  [36,()=>join('filho','R')],
+  [41,()=>leave('pai')],
+  [46,()=>leave('mae')],
+  [51,()=>leave('esposa')],
+  [57,finale]
+];
+
+function init(){
+  T=0;th={};ev=0;fade=1;lines=0;lastAge=-1;
+  $('end').style.opacity=0;$('end').style.pointerEvents='none';
+  if(RM)for(let i=0;i<64*30;i++)step(1/30);
+}
+
+function lanes(){
+  const a=Object.values(th).filter(t=>t.st==='live').sort((x,y)=>x.d.o-y.d.o);
+  a.forEach((t,i)=>{t.tx=W*(i+1)/(a.length+1);t.i=i;if(t.x===null)t.x=t.tx;});
+}
+
+function step(dt){
+  T+=dt;
+  while(ev<EV.length&&T>=EV[ev][0])EV[ev++][1]();
+  lanes();
+  const sc=55*dt;
+  for(const id in th){
+    const t=th[id];
+    if(t.st!=='pass')for(const p of t.pts)p.y+=sc;
+    while(t.pts.length&&t.pts[0].y>H+20)t.pts.shift();
+    if(t.st==='live'){
+      t.x+=(t.tx-t.x)*Math.min(1,dt*2.2);t.y=baseY();
+    }else if(t.st==='pass'){
+      t.x+=t.dir*(W/4)*dt;const u=Math.min(1,Math.abs(t.x-(t.dir>0?-30:W+30))/(W+60));t.y=t.y0-H*.2*u*u;
+      if((t.dir>0&&t.x>W+30)||(t.dir<0&&t.x<-30)){t.st='gone';t.left=T;}
+    }else if(t.st==='rise'||t.st==='fin'){
+      const sp=t.away?[1.15,.45]:STAR[t.id];
+      const gx=sp[0]*W,gy=sp[1]*H,k=Math.min(1,dt*1.3);
+      t.x+=(gx-t.x)*k;t.y+=(gy-t.y)*k;
+      if(Math.hypot(gx-t.x,gy-t.y)<2)t.st=t.away?'gone':(t.st==='fin'?'fstar':'star');
+    }
+    if(t.st==='live'||t.st==='pass'||t.st==='rise'||t.st==='fin')t.pts.push({x:t.x,y:t.y});
+    if(t.flash>0)t.flash-=dt;
+    if(t.dir!==undefined&&t.st==='gone'&&t.pts.length)t.pts.shift();
+    if(t.st==='gone'&&!t.pts.length)delete th[id];
+  }
+  if(T>57){fade=Math.max(0,fade-dt*.25);}
+  if(T>59)lines=Math.min(1,lines+dt*.3);
+}
+
+function glow(x,y,r,c,a){
+  const g=ctx.createRadialGradient(x,y,0,x,y,r);
+  g.addColorStop(0,c);g.addColorStop(1,'transparent');
+  ctx.globalAlpha=a;ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,6.283);ctx.fill();ctx.globalAlpha=1;
+}
+
+function trail(t){
+  const n=t.pts.length;if(n<2)return;
+  const ft=t.left>0?Math.max(0,1-(T-t.left)/7):1;
+  ctx.strokeStyle=t.d.c;ctx.lineCap='round';ctx.lineJoin='round';
+  for(let i=0;i<n-1;i+=6){
+    const j=Math.min(i+6,n-1),a=Math.pow(j/n,1.2)*fade*ft;
+    if(a<.02)continue;
+    ctx.beginPath();ctx.moveTo(t.pts[i].x,t.pts[i].y);
+    for(let k=i+1;k<=j;k++)ctx.lineTo(t.pts[k].x,t.pts[k].y);
+    ctx.globalAlpha=a*.2;ctx.lineWidth=7;ctx.stroke();
+    ctx.globalAlpha=a*.9;ctx.lineWidth=2;ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+}
+
+function pos(id){
+  const t=th[id];if(!t)return null;
+  if(t.st==='star'||t.st==='fstar'){const s=STAR[id];return[s[0]*W,s[1]*H];}
+  return[t.x,t.y];
+}
+
+function draw(){
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0a1030');g.addColorStop(1,'#050816');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#cfd8ff';
+  for(const s of bg){ctx.globalAlpha=RM?.5:.35+.35*Math.sin(T*.8+s.p);ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.r,0,6.283);ctx.fill();}
+  ctx.globalAlpha=1;
+  ctx.globalCompositeOperation='lighter';
+  const list=Object.values(th);
+  for(const t of list)trail(t);
+  for(const t of list){
+    if(t.st==='gone')continue;
+    const p=pos(t.id),pulse=Math.sin(T*2+t.born);
+    if(t.st==='fstar'){glow(p[0],p[1],34+3*pulse,t.d.c,.9);glow(p[0],p[1],8,'#fff',1);}
+    else if(t.st==='star'){glow(p[0],p[1],13+2*pulse,t.d.c,.8);glow(p[0],p[1],3,'#fff',1);}
+    else{
+      const grow=Math.min(1,(T-t.born)/2+.2),big=t.flash>0?1.5:1;
+      glow(p[0],p[1],13*grow*big,t.flash>0?'#fff':t.d.c,.85);glow(p[0],p[1],3*grow,'#fff',1);
+    }
+  }
+  ctx.globalCompositeOperation='source-over';
+  // linhas da constelação
+  ctx.strokeStyle='#fff';ctx.lineWidth=1;
+  for(let s=0;s<CHAIN.length-1;s++){
+    const a=pos(CHAIN[s]),b=pos(CHAIN[s+1]);if(!a||!b)continue;
+    const q=Math.min(1,Math.max(0,lines*(CHAIN.length-1)-s));if(q<=0)continue;
+    ctx.globalAlpha=.35;ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(a[0]+(b[0]-a[0])*q,a[1]+(b[1]-a[1])*q);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  // nomes
+  ctx.textAlign='center';ctx.font='11px system-ui,sans-serif';
+  for(const t of list){
+    if(t.st==='gone')continue;
+    const p=pos(t.id);
+    const star=t.st==='star'||t.st==='fstar';
+    const txt=(t.flash>0&&t.d.f)?t.d.f:t.d.n;
+    const ly=p[1]-14-(t.i%2)*13;
+    ctx.fillStyle=t.d.c;ctx.globalAlpha=star?.9:.85;
+    ctx.fillText(txt,p[0],ly);
+  }
+  ctx.globalAlpha=1;
+  const age=Math.max(0,Math.floor((T-1)*1.1));
+  if(age!==lastAge){lastAge=age;$('age').textContent=age+' anos';}
+}
+
+let last=0;
+function loop(ts){
+  const dt=Math.min(.05,(ts-last)/1000||0);last=ts;
+  if(!(RM&&T>60))step(dt);else T+=dt;
+  draw();requestAnimationFrame(loop);
+}
+
+$('again').addEventListener('click',init);
+addEventListener('resize',size);
+size();init();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
