@@ -42,10 +42,11 @@ const P={
   amigo:{n:'Amigo',c:'#5fe0a0',o:2.5,dy:0},
   filho:{n:'Filho',c:'#35d7e8',o:2.7},
   pai:{n:'Pai',c:'#5b8cff',o:3,dy:-.02},
-  avo2:{n:'Avó',c:'#9fe3ff',o:4,dy:.01}
+  avo2:{n:'Avó',c:'#9fe3ff',o:4,dy:.01},
+  irmaos:{n:'Irmãos',c:'#b8f05c',o:3.5,dy:.01}
 };
-const STAR={avo1:[.12,.12],avo2:[.88,.1],pai:[.8,.42],mae:[.14,.46],esposa:[.33,.40],filho:[.9,.2],eu:[.5,.5]};
-const CHAIN=['avo1','mae','esposa','eu','pai','filho','avo2'];
+const STAR={avo1:[.12,.12],avo2:[.88,.1],pai:[.8,.42],mae:[.14,.46],esposa:[.33,.40],filho:[.9,.2],eu:[.5,.5],irmaos:[.62,.2]};
+const CHAIN=['avo1','mae','esposa','eu','irmaos','pai','filho','avo2'];
 const baseY=()=>H*.56;
 
 function size(){
@@ -73,10 +74,12 @@ const EV=[
   [17,()=>leave('avo1')],
   [23,()=>leave('avo2')],
   [24,()=>pass('Colega da faculdade',1,H*.70)],
+  [25,()=>join('irmaos','R')],
   [28,()=>join('esposa','L')],
   [33,()=>leave('amigo',true)],
   [38,()=>leave('pai')],
-  [39,()=>join('filho','R')],
+  [41,()=>join('filho','R')],
+  [44,()=>leave('irmaos')],
   [45,()=>leave('mae')],
   [51,()=>leave('esposa')],
   [57,finale]
